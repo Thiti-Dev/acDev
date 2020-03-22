@@ -14,7 +14,9 @@ import {
 	Form,
 	InputGroup
 } from 'react-bootstrap';
+import { AwesomeButton, AwesomeButtonProgress, AwesomeButtonSocial } from 'react-awesome-button';
 import { Parallax, Background } from 'react-parallax';
+import DatePicker from 'react-date-picker';
 //
 // ─── STYLING ────────────────────────────────────────────────────────────────────
 //
@@ -58,13 +60,15 @@ const RegisterHolder = styled.div`
 const regisBg =
 	'https://images.pexels.com/photos/1229861/pexels-photo-1229861.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940';
 function Register({ setParentState }) {
-	const [ validated, setValidated ] = useState(true); // always validate by deafult
+	const [ validated, setValidated ] = useState(false); // always validate by deafult
 	const [ errors, setError ] = useState({}); // empty error at first
 	const [ credentials, setCredential ] = useState({
 		email: '',
 		username: '',
 		firstName: '',
-		lastName: ''
+		lastName: '',
+		date: new Date('1998-01-01T14:48:00.000Z'),
+		gender: ''
 	});
 
 	const validateCredential = () => {
@@ -73,10 +77,12 @@ function Register({ setParentState }) {
 	};
 
 	const handleSubmit = (event) => {
+		event.preventDefault(); // Preventing by deafult behavior
 		const form = event.currentTarget;
 		if (form.checkValidity() === false) {
-			event.preventDefault();
+			//event.preventDefault();
 			event.stopPropagation();
+			console.log('notvalidate');
 		}
 
 		console.log(credentials);
@@ -94,7 +100,7 @@ function Register({ setParentState }) {
 
 	return (
 		<React.Fragment>
-			<Container fluid style={{ padding: 60 }}>
+			<Container fluid style={{ padding: 60, fontFamily: 'Courier New' }}>
 				<Row>
 					<Col>
 						<RegisterHolder>
@@ -175,6 +181,51 @@ function Register({ setParentState }) {
 										<Form.Control.Feedback>Looks valid!</Form.Control.Feedback>
 									</Form.Group>
 								</Form.Row>
+								<Form.Row>
+									<Form.Group as={Col} md="6" controlId="validationCustomDob">
+										<Form.Label>Date Of Birth</Form.Label>
+										<br />
+										<DatePicker
+											onChange={(date) =>
+												setCredential((prevState) => {
+													return { ...prevState, date: date };
+												})}
+											value={credentials.date}
+											required
+										/>
+									</Form.Group>
+									<Form.Group as={Col} md="6" controlId="validationCustomGender">
+										<Form.Check.Label>Gender</Form.Check.Label>
+										<Form.Check
+											required
+											custom
+											type="radio"
+											id="male"
+											label="Male"
+											name="gender"
+											onChange={(ee) => {
+												setCredential((prevState) => {
+													return { ...prevState, gender: 'male' };
+												});
+											}}
+											value="male"
+										/>
+										<Form.Check
+											required
+											custom
+											type="radio"
+											id="female"
+											label="Female"
+											name="gender"
+											onChange={(ee) => {
+												setCredential((prevState) => {
+													return { ...prevState, gender: 'female' };
+												});
+											}}
+											value="female"
+										/>
+									</Form.Group>
+								</Form.Row>
 
 								<Form.Group>
 									<Form.Check
@@ -183,9 +234,22 @@ function Register({ setParentState }) {
 										feedback="You must agree before submitting."
 									/>
 								</Form.Group>
-								<FullButtonField type="submit" variant="outline-primary">
+								{/* <FullButtonField type="submit" variant="outline-primary">
 									Create account!
-								</FullButtonField>
+								</FullButtonField> */}
+								<AwesomeButtonProgress
+									style={{ width: '100%' }}
+									type="secondary submit"
+									size="medium"
+									action={(element, next) =>
+										setTimeout(() => {
+											next();
+										}, 500)}
+									loadingLabel="Creating Account , Please be patient . . ."
+									resultLabel="👍🏽"
+								>
+									Register
+								</AwesomeButtonProgress>
 							</Form>
 						</RegisterHolder>
 					</Col>
