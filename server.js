@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const colors = require('colors');
 const errorHandler = require('./middleware/error');
 const connectDB = require('./config/db');
-
+const cookieParser = require('cookie-parser');
 //
 // ─── ROUTE ──────────────────────────────────────────────────────────────────────
 //
@@ -23,14 +23,18 @@ const mainThread = async () => {
 		app.use(morgan('dev'));
 	}
 
-	// Body parser
+	//
+	// ─── PARSER ─────────────────────────────────────────────────────────────────────
+	//
+	// Body
 	app.use(express.json());
-
+	// Cookie
+	app.use(cookieParser());
+	// ────────────────────────────────────────────────────────────────────────────────
 	// ─── ROUTES ─────────────────────────────────────────────────────────────────────
 	//
 	app.use('/api/users', users);
 	// ────────────────────────────────────────────────────────────────────────────────
-
 	//
 	// ─── CUSTOM ERROR HANDLER ───────────────────────────────────────────────────────
 	//
