@@ -31,6 +31,15 @@ import styled from 'styled-components';
 import OnScreenSensor from 'react-onscreensensor';
 import valueWatcher from '../../utils/JsValueWatcher';
 // ────────────────────────────────────────────────────────────────────────────────
+//
+// ─── FUNC ───────────────────────────────────────────────────────────────────────
+//
+import * as Func from '../../utils/Functions';
+// ────────────────────────────────────────────────────────────────────────────────
+//
+// ─── VALIDATOR ──────────────────────────────────────────────────────────────────
+//
+import _isRegistrationValid from './validation/register';
 
 const FullButtonField = styled(Button)`
     width: 100%;
@@ -55,7 +64,7 @@ const LabelText = styled.div`
 
 const RegisterHolder = styled.div`
 	position: absolute;
-	top: 20%;
+	top: 0%;
 	left: -3%;
 	width: 100%;
 `;
@@ -70,10 +79,12 @@ const regisBg =
 
 function Register({ setParentState }) {
 	const myForm = useRef(); // Referencing to our form
-	const [ validated, setValidated ] = useState(true); // always validate by deafult
+	const [ validated, setValidated ] = useState(false); // always validate by deafult ==> for now false
 	const [ errors, setError ] = useState({}); // empty error at first
 	const [ credentials, setCredential ] = useState({
 		email: '',
+		password: '',
+		confirmPassword: '',
 		username: '',
 		firstName: '',
 		lastName: '',
@@ -102,7 +113,7 @@ function Register({ setParentState }) {
 		// No need for now , using bulit in react-bootstrap for the validation
 	};
 
-	const handleSubmit = async (event) => {
+	/*const handleSubmit = async (event) => {
 		event.preventDefault(); // Preventing by deafult behavior
 		const form = event.currentTarget;
 		let next; // An awaiter => using this for avoid synthetic re-used performance isisue
@@ -115,11 +126,26 @@ function Register({ setParentState }) {
 			next = await waitUntilGotNext(); // wait for the beautify button callback
 			next(false, '💢 Could not proceed . . . ');
 		} else {
+			//Validate will be rendering on server side this time
+			try {
+				const res = await axios.post('/api/users/register', credentials);
+				console.log(res);
+			} catch (error) {
+				console.log(error.response);
+			}
+
 			next = await waitUntilGotNext(); // wait for the beautify button callback
 			next();
 		}
 
 		console.log(credentials);
+	};*/
+
+	const handleSubmit = async (next) => {
+		if (!_isRegistrationValid(credentials)) {
+			return next(false, '💢 Could not proceed . . . ');
+		}
+		next(); // Thumbing up
 	};
 
 	const formInputHandler = (event) => {
@@ -136,7 +162,12 @@ function Register({ setParentState }) {
 				<Row>
 					<Col>
 						<RegisterHolder>
-							<Form ref={myForm} noValidate validated={validated} onSubmit={handleSubmit}>
+							<Form
+								ref={myForm}
+								noValidate
+								validated={false}
+								onSubmit={(event) => event.preventDefault()}
+							>
 								<Form.Row>
 									<Form.Group as={Col} md="6" controlId="validationCustom01">
 										<Form.Label>First name</Form.Label>
@@ -155,10 +186,12 @@ function Register({ setParentState }) {
 											placeholder="First name"
 											autoComplete="off"
 											maxLength={20}
+											isValid={credentials.firstName.length >= 3}
+											isInvalid={credentials.firstName.length < 3}
 										/>
 										<Form.Control.Feedback>Looks good!</Form.Control.Feedback>
 										<Form.Control.Feedback type="invalid">
-											Please don't leave this empty
+											{credentials.firstName.length === 0 ? null : 'It is too short'}
 										</Form.Control.Feedback>
 									</Form.Group>
 									<Form.Group as={Col} md="6" controlId="validationCustom02">
@@ -172,8 +205,13 @@ function Register({ setParentState }) {
 											value={credentials.lastName}
 											onChange={formInputHandler}
 											maxLength={20}
+											isValid={credentials.lastName.length >= 3}
+											isInvalid={credentials.lastName.length < 3}
 										/>
 										<Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+										<Form.Control.Feedback type="invalid">
+											{credentials.lastName.length === 0 ? null : 'It is too short'}
+										</Form.Control.Feedback>
 									</Form.Group>
 								</Form.Row>
 								<Form.Row>
@@ -193,9 +231,13 @@ function Register({ setParentState }) {
 												value={credentials.username}
 												onChange={formInputHandler}
 												maxLength={12}
+												isInvalid={
+													credentials.username.length === 0 || credentials.username.length < 3
+												}
+												isValid={credentials.username.length >= 3}
 											/>
 											<Form.Control.Feedback type="invalid">
-												Please choose a username.
+												{credentials.username.length === 0 ? null : 'Little bit short!'}
 											</Form.Control.Feedback>
 										</InputGroup>
 									</Form.Group>
@@ -209,8 +251,73 @@ function Register({ setParentState }) {
 											name="email"
 											value={credentials.email}
 											onChange={formInputHandler}
+											isValid={Func.validateEmail(credentials.email)}
+											isInvalid={!Func.validateEmail(credentials.email)}
 										/>
 										<Form.Control.Feedback>Looks valid!</Form.Control.Feedback>
+										<Form.Control.Feedback type="invalid">
+											{credentials.email.length === 0 ? null : 'Invalid Email!'}
+										</Form.Control.Feedback>
+									</Form.Group>
+								</Form.Row>
+								<Form.Row>
+									<Form.Group as={Col} md="6" controlId="validationCustomPassword">
+										<Form.Label>Password</Form.Label>
+										<InputGroup>
+											<InputGroup.Prepend>
+												<InputGroup.Text id="inputGroupPrepend2">🔑</InputGroup.Text>
+											</InputGroup.Prepend>
+											<Form.Control
+												type="password"
+												placeholder="Password"
+												aria-describedby="inputGroupPrepend2"
+												required
+												autoComplete="off"
+												name="password"
+												value={credentials.password}
+												onChange={formInputHandler}
+												maxLength={50}
+												isValid={
+													credentials.password.length > 0 &&
+													credentials.password === credentials.confirmPassword
+												}
+												isInvalid={
+													(credentials.confirmPassword.length > 0 &&
+														credentials.password !== credentials.confirmPassword) ||
+													credentials.password.length === 0
+												}
+											/>
+											<Form.Control.Feedback type="invalid">{null}</Form.Control.Feedback>
+										</InputGroup>
+									</Form.Group>
+									<Form.Group as={Col} md="6" controlId="validationCustomConfirmPassword">
+										<Form.Label>Confirm Password</Form.Label>
+										<InputGroup>
+											<InputGroup.Prepend>
+												<InputGroup.Text id="inputGroupPrepend3">🔑</InputGroup.Text>
+											</InputGroup.Prepend>
+											<Form.Control
+												type="password"
+												placeholder="Confirm password"
+												aria-describedby="inputGroupPrepend3"
+												required
+												autoComplete="off"
+												name="confirmPassword"
+												value={credentials.confirmPassword}
+												onChange={formInputHandler}
+												maxLength={50}
+												isValid={
+													credentials.password.length > 0 &&
+													credentials.password === credentials.confirmPassword
+												}
+												isInvalid={
+													(credentials.password.length > 0 &&
+														credentials.password !== credentials.confirmPassword) ||
+													credentials.confirmPassword.length === 0
+												}
+											/>
+											<Form.Control.Feedback type="invalid">{null}</Form.Control.Feedback>
+										</InputGroup>
 									</Form.Group>
 								</Form.Row>
 								<Form.Row>
@@ -275,11 +382,12 @@ function Register({ setParentState }) {
 								</FullButtonField> */}
 								<AwesomeButtonProgress
 									style={{ width: '100%' }}
-									type="secondary submit"
+									type="secondary"
 									size="medium"
 									action={(element, next) =>
 										setTimeout(() => {
-											awesome_button_middleware = next;
+											//awesome_button_middleware = next;
+											handleSubmit(next);
 										}, 500)}
 									loadingLabel="Creating Account , Please be patient . . ."
 									resultLabel="👍🏽"
