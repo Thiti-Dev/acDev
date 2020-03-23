@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
 	Button,
 	//Jumbotron,
@@ -17,6 +17,8 @@ import {
 import { AwesomeButton, AwesomeButtonProgress, AwesomeButtonSocial } from 'react-awesome-button';
 import { Parallax, Background } from 'react-parallax';
 import DatePicker from 'react-date-picker';
+
+import axios from 'axios';
 //
 // ─── STYLING ────────────────────────────────────────────────────────────────────
 //
@@ -27,6 +29,7 @@ import styled from 'styled-components';
 // ─── MY LIBRARY ─────────────────────────────────────────────────────────────────
 //
 import OnScreenSensor from 'react-onscreensensor';
+import valueWatcher from '../../utils/JsValueWatcher';
 // ────────────────────────────────────────────────────────────────────────────────
 
 const FullButtonField = styled(Button)`
@@ -57,37 +60,66 @@ const RegisterHolder = styled.div`
 	width: 100%;
 `;
 
+const CustomErrorFeedback = styled.p`
+	color: red;
+	font-size: 0.9rem;
+`;
+
 const regisBg =
 	'https://images.pexels.com/photos/1229861/pexels-photo-1229861.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940';
+
 function Register({ setParentState }) {
-	const [ validated, setValidated ] = useState(false); // always validate by deafult
+	const myForm = useRef(); // Referencing to our form
+	const [ validated, setValidated ] = useState(true); // always validate by deafult
 	const [ errors, setError ] = useState({}); // empty error at first
 	const [ credentials, setCredential ] = useState({
 		email: '',
 		username: '',
 		firstName: '',
 		lastName: '',
-		date: new Date('1998-01-01T14:48:00.000Z'),
+		dateOfBirth: new Date('1998-01-01T14:48:00.000Z'),
 		gender: ''
 	});
+	const sleep = (m) => new Promise((r) => setTimeout(r, m));
+	var awesome_button_middleware = undefined; // Function will be added later when the button is clicked
+
+	const waitUntilGotNext = async () => {
+		await sleep(300);
+		return new Promise((resolve, reject) => {
+			if (!awesome_button_middleware) {
+				resolve(waitUntilGotNext());
+			} else {
+				let _cached = awesome_button_middleware;
+				awesome_button_middleware = undefined; // reset
+				console.log('return');
+				resolve(_cached);
+			}
+		});
+	};
 
 	const validateCredential = () => {
 		//Validating the credential before sending a real req by axios / fetch
 		// No need for now , using bulit in react-bootstrap for the validation
 	};
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault(); // Preventing by deafult behavior
 		const form = event.currentTarget;
-		if (form.checkValidity() === false) {
+		let next; // An awaiter => using this for avoid synthetic re-used performance isisue
+		if (form.checkValidity() === false || !credentials.dateOfBirth) {
 			//event.preventDefault();
 			event.stopPropagation();
-			console.log('notvalidate');
+			console.log('[ERROR] : Credentials are not valid yet');
+			setValidated(true);
+
+			next = await waitUntilGotNext(); // wait for the beautify button callback
+			next(false, '💢 Could not proceed . . . ');
+		} else {
+			next = await waitUntilGotNext(); // wait for the beautify button callback
+			next();
 		}
 
 		console.log(credentials);
-
-		//setValidated(true);
 	};
 
 	const formInputHandler = (event) => {
@@ -104,7 +136,7 @@ function Register({ setParentState }) {
 				<Row>
 					<Col>
 						<RegisterHolder>
-							<Form noValidate validated={validated} onSubmit={handleSubmit}>
+							<Form ref={myForm} noValidate validated={validated} onSubmit={handleSubmit}>
 								<Form.Row>
 									<Form.Group as={Col} md="6" controlId="validationCustom01">
 										<Form.Label>First name</Form.Label>
@@ -188,11 +220,15 @@ function Register({ setParentState }) {
 										<DatePicker
 											onChange={(date) =>
 												setCredential((prevState) => {
-													return { ...prevState, date: date };
+													return { ...prevState, dateOfBirth: date };
 												})}
-											value={credentials.date}
+											value={credentials.dateOfBirth}
 											required
 										/>
+										<br />
+										<CustomErrorFeedback>
+											{!credentials.dateOfBirth ? 'Please select your birthdate' : null}
+										</CustomErrorFeedback>
 									</Form.Group>
 									<Form.Group as={Col} md="6" controlId="validationCustomGender">
 										<Form.Check.Label>Gender</Form.Check.Label>
@@ -243,7 +279,7 @@ function Register({ setParentState }) {
 									size="medium"
 									action={(element, next) =>
 										setTimeout(() => {
-											next();
+											awesome_button_middleware = next;
 										}, 500)}
 									loadingLabel="Creating Account , Please be patient . . ."
 									resultLabel="👍🏽"
