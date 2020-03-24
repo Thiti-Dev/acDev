@@ -14,7 +14,9 @@ const _isRegistrationValid = (credentials) => {
 		credentials.password !== credentials.confirmPassword ||
 		credentials.password.length === 0 ||
 		credentials.confirmPassword.length === 0 ||
-		(credentials.gender !== 'male' && credentials.gender !== 'female')
+		(credentials.gender !== 'male' && credentials.gender !== 'female') ||
+		credentials.gender === '' ||
+		credentials.gender === null
 	) {
 		return false;
 	}
