@@ -3,6 +3,8 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const User = require('../models/User');
 
+const sendErrorWithObjectDetail = require('../utils/errorResponseObject');
+
 // @desc    Return current identity
 // @route   GET /api/users/me
 // @acess   Private
@@ -23,6 +25,21 @@ exports.testRoute = asyncHandler(async (req, res, next) => {
 // @acess   Public
 exports.register = asyncHandler(async (req, res, next) => {
 	const { email, firstName, lastName, username, gender, dateOfBirth, password } = req.body;
+	const errors = {}; // empty object at first
+	// Duplication check => avoid MongoError: E11000 custom validation from the duplicate value entered => but it doesn't give the key soooooo it's useless
+	const _exist_username = await User.findOne({ username }); // check if the entered username exist
+	const _exist_email = await User.findOne({ email }); // check if the entered email exist
+	if (_exist_username) {
+		errors.username = 'This username is already exist';
+	}
+	if (_exist_email) {
+		errors.email = 'This email is already exist';
+	}
+
+	if (Object.keys(errors).length > 0) {
+		// If the errors above is not empty
+		return sendErrorWithObjectDetail(res, errors, 400);
+	}
 
 	// Create user
 	const user = await User.create({
@@ -35,6 +52,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 		password
 	});
 
+	// Send the response with the token attached
 	sendTokenResponse(user, 200, res);
 });
 
