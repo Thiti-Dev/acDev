@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import {
 	//Button,
 	//Jumbotron,
@@ -146,7 +147,7 @@ export class IndexPage extends Component {
 		return (
 			<Animated animationIn="fadeIn" animationOut="fadeOut" isVisible={true} animationInDuration={1500}>
 				<Container fluid style={{ margin: 0, padding: 0 }}>
-					<CustomNav scrollTo={this.scrollTo} />
+					<CustomNav scrollTo={this.scrollTo} history={this.props.history} />
 
 					<SectionSep />
 
@@ -241,4 +242,4 @@ export class IndexPage extends Component {
 	}
 }
 
-export default IndexPage;
+export default withRouter(IndexPage);

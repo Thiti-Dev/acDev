@@ -1,4 +1,5 @@
 import React from 'react';
+import { withRouter } from 'react-router-dom';
 import { Button, Jumbotron, Container, Spinner, Breadcrumb, Toast } from 'react-bootstrap';
 import { Link, Element, Events, animateScroll as scroll, scrollSpy, scroller } from 'react-scroll';
 import { Parallax, Background } from 'react-parallax';
@@ -40,7 +41,7 @@ const NavAuthContainer = styled.div`
 	color: white;
 `;
 
-export default function CustomNav({ scrollTo }) {
+function CustomNav({ scrollTo, history }) {
 	return (
 		<Parallax bgImage={image1} strength={500} blur={{ min: -15, max: 25 }}>
 			<div style={{ height: 500 }}>
@@ -48,7 +49,7 @@ export default function CustomNav({ scrollTo }) {
 				<NavAuthContainer>
 					<Breadcrumb>
 						<Breadcrumb.Item onClick={scrollTo.bind(this, 'register')}>Sign Up</Breadcrumb.Item>
-						<Breadcrumb.Item>Sign In</Breadcrumb.Item>
+						<Breadcrumb.Item onClick={() => history.push('/login')}>Sign In</Breadcrumb.Item>
 					</Breadcrumb>
 				</NavAuthContainer>
 				<NavMinContainer>
@@ -64,3 +65,5 @@ export default function CustomNav({ scrollTo }) {
 		</Parallax>
 	);
 }
+
+export default withRouter(CustomNav);

@@ -5,6 +5,7 @@ import 'react-awesome-button/dist/styles.css';
 
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import IndexPage from './components/pages/Index/IndexPage';
+import Login from './components/pages/Login/Login';
 
 class App extends Component {
 	render() {
@@ -12,6 +13,7 @@ class App extends Component {
 			<Router>
 				<Switch>
 					<Route exact path="/" component={IndexPage} />
+					<Route exact path="/login" component={Login} />
 				</Switch>
 			</Router>
 		);
