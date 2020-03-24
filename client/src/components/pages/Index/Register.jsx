@@ -97,7 +97,7 @@ var awesome_button_middleware = undefined; // Function will be added later when 
 function Register({ setParentState }) {
 	useEffect(() => {
 		// Run! Like go get some data from an API.
-		console.log('component mount');
+		document.title = '💉 acDev : homepage'; // adjust document title
 	}, []);
 	const myForm = useRef(); // Referencing to our form
 	const [ validated, setValidated ] = useState(false); // always validate by deafult ==> for now false
