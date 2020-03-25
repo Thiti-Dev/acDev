@@ -34,6 +34,7 @@ import * as Func from '../../utils/Functions';
 
 import MainBg from './img/main.jpg';
 import ComsPic from './img/comms.jpg';
+import _isLoginCredentialValid from './validation/login';
 const MainContainer = styled.div`
 	/* position: fixed; */
 	position: relative;
@@ -118,6 +119,13 @@ const FormContainer = styled.div`
 	}
 `;
 
+const CustomErrorText = styled.p`
+	color: red;
+	font-size: 0.8rem;
+	text-align: center;
+	margin-top: 2rem;
+`;
+
 function Login() {
 	useEffect(() => {
 		document.title = '👁‍🗨 Who are you?';
@@ -131,9 +139,33 @@ function Login() {
 		password: ''
 	}); // Will be storing the credential
 	const [ errors, setError ] = useState({});
+	const [ errorMsg, setErrMsg ] = useState('');
+	const [ isAuthorized, setAuthorized ] = useState(false);
 	// ────────────────────────────────────────────────────────────────────────────────
 
-	const handleSubmit = async (next) => {};
+	const handleSubmit = async (next) => {
+		if (!_isLoginCredentialValid(credentials)) {
+			return next(false, '💢 Could not proceed . . . ');
+		}
+		try {
+			const res = await axios.post('/api/users/login', credentials);
+			next(); // Thumbing up
+			setError({}); // clear the error
+			setErrMsg('');
+			setTimeout(() => {
+				setAuthorized(true); // fading out animation
+			}, 1000);
+		} catch (error) {
+			// destructuring
+			let _errors = error.response.data;
+			if (typeof _errors.errors === 'string') {
+				//If the error type is string
+				setErrMsg(_errors.errors);
+			}
+			setError(error.response.data); // applied the error
+			next(false, '💢 Could not proceed . . . ');
+		}
+	};
 
 	const formInputHandler = (event) => {
 		let key = event.target.name;
@@ -147,86 +179,95 @@ function Login() {
 	return (
 		<React.Fragment>
 			<BackgroundAbs />
-			<MainContainer>
-				<Container fluid>
-					<Row>
-						<Col sm={12} md={6}>
-							<ParallaxContainer>
-								<Parallax
-									className="parallax-img"
-									bgImage={ComsPic}
-									strength={500}
-									blur={{ min: -15, max: 25 }}
-									style={{ borderRadius: '1rem' }}
-								>
-									<div style={{ height: 500 }}>
-										<LabelText>Think Everywhere , Work Every Places</LabelText>
-									</div>
-								</Parallax>
-							</ParallaxContainer>
-						</Col>
-						<Col sm={12} md={6}>
-							<FormContainer className="fuck">
-								<Card style={{ padding: '1rem' }}>
-									<Form onSubmit={(e) => e.preventDefault()}>
-										<Form.Group controlId="formBasicEmail">
-											<Form.Label>Email address</Form.Label>
-											<Form.Control
-												type="email"
-												autoComplete="off"
-												placeholder="Enter email"
-												value={credentials.email}
-												onChange={formInputHandler}
-												name="email"
-												isInvalid={
-													!Func.validateEmail(credentials.email) &&
-													credentials.email.length > 0
-												}
-												required
-											/>
-											<Form.Control.Feedback type="invalid">
-												{!errors.email ? credentials.email.length > 0 ? (
-													'Invalid Email'
-												) : null : (
-													errors.email
-												)}
-											</Form.Control.Feedback>
-										</Form.Group>
+			<Animated
+				animationIn="fadeIn"
+				animationInDuration={2000}
+				isVisible={!isAuthorized}
+				animationOut="slideOutDown"
+				animationOutDuration={900}
+			>
+				<MainContainer>
+					<Container fluid>
+						<Row>
+							<Col sm={12} md={6}>
+								<ParallaxContainer>
+									<Parallax
+										className="parallax-img"
+										bgImage={ComsPic}
+										strength={500}
+										blur={{ min: -15, max: 25 }}
+										style={{ borderRadius: '1rem' }}
+									>
+										<div style={{ height: 500 }}>
+											<LabelText>Think Everywhere , Work Every Places</LabelText>
+										</div>
+									</Parallax>
+								</ParallaxContainer>
+							</Col>
+							<Col sm={12} md={6}>
+								<FormContainer className="fuck">
+									<Card style={{ padding: '1rem' }}>
+										<Form noValidate onSubmit={(e) => e.preventDefault()}>
+											<Form.Group controlId="formBasicEmail">
+												<Form.Label>Email address</Form.Label>
+												<Form.Control
+													type="email"
+													autoComplete="off"
+													placeholder="Enter email"
+													value={credentials.email}
+													onChange={formInputHandler}
+													name="email"
+													isInvalid={
+														!Func.validateEmail(credentials.email) &&
+														credentials.email.length > 0
+													}
+													required
+												/>
+												<Form.Control.Feedback type="invalid">
+													{!errors.email ? credentials.email.length > 0 ? (
+														'Invalid Email'
+													) : null : (
+														errors.email
+													)}
+												</Form.Control.Feedback>
+											</Form.Group>
 
-										<Form.Group controlId="formBasicPassword">
-											<Form.Label>Password</Form.Label>
-											<Form.Control
-												type="password"
-												placeholder="Password"
-												value={credentials.password}
-												onChange={formInputHandler}
-												name="password"
-											/>
-										</Form.Group>
-										<Form.Group controlId="formBasicCheckbox">
-											<Form.Check type="checkbox" label="Remember me?" />
-										</Form.Group>
-										<AwesomeButtonProgress
-											style={{ width: '100%' }}
-											type="secondary"
-											size="medium"
-											action={(element, next) =>
-												setTimeout(() => {
-													//awesome_button_middleware = next;
-													handleSubmit(next);
-												}, 500)}
-											loadingLabel="Logging In , Please be patient . . ."
-											resultLabel="👍🏽"
-										>
-											Sign In
-										</AwesomeButtonProgress>
-									</Form>
-								</Card>
-							</FormContainer>
-						</Col>
-					</Row>
-				</Container>
-			</MainContainer>
+											<Form.Group controlId="formBasicPassword">
+												<Form.Label>Password</Form.Label>
+												<Form.Control
+													type="password"
+													placeholder="Password"
+													value={credentials.password}
+													onChange={formInputHandler}
+													name="password"
+												/>
+											</Form.Group>
+											<Form.Group controlId="formBasicCheckbox">
+												<Form.Check type="checkbox" label="Remember me?" />
+											</Form.Group>
+											<AwesomeButtonProgress
+												style={{ width: '100%' }}
+												type="secondary"
+												size="medium"
+												action={(element, next) =>
+													setTimeout(() => {
+														//awesome_button_middleware = next;
+														handleSubmit(next);
+													}, 500)}
+												loadingLabel="Logging In , Please be patient . . ."
+												resultLabel="👍🏽"
+											>
+												Sign In
+											</AwesomeButtonProgress>
+										</Form>
+										<CustomErrorText>{errorMsg ? errorMsg : null}</CustomErrorText>
+									</Card>
+								</FormContainer>
+							</Col>
+						</Row>
+					</Container>
+				</MainContainer>
+			</Animated>
 		</React.Fragment>
 	);
 }
