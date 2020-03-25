@@ -4,8 +4,9 @@ import 'hover.css/css/hover-min.css';
 import 'react-awesome-button/dist/styles.css';
 
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import IndexPage from './components/pages/Index/IndexPage';
-import Login from './components/pages/Login/Login';
+import IndexPage from './components/pages/Index/';
+import Login from './components/pages/Login';
+import Dashboard from './components/pages/Dashboard';
 
 class App extends Component {
 	render() {
@@ -14,6 +15,7 @@ class App extends Component {
 				<Switch>
 					<Route exact path="/" component={IndexPage} />
 					<Route exact path="/login" component={Login} />
+					<Route exact path="/dashboard" component={Dashboard} />
 				</Switch>
 			</Router>
 		);
