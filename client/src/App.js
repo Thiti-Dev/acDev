@@ -8,16 +8,23 @@ import IndexPage from './components/pages/Index/';
 import Login from './components/pages/Login';
 import Dashboard from './components/pages/Dashboard';
 
+// -------------- Redux -----------------
+import { Provider } from 'react-redux';
+import store from './redux/store';
+// --------------------------------------
+
 class App extends Component {
 	render() {
 		return (
-			<Router>
-				<Switch>
-					<Route exact path="/" component={IndexPage} />
-					<Route exact path="/login" component={Login} />
-					<Route exact path="/dashboard" component={Dashboard} />
-				</Switch>
-			</Router>
+			<Provider store={store}>
+				<Router>
+					<Switch>
+						<Route exact path="/" component={IndexPage} />
+						<Route exact path="/login" component={Login} />
+						<Route exact path="/dashboard" component={Dashboard} />
+					</Switch>
+				</Router>
+			</Provider>
 		);
 	}
 }
